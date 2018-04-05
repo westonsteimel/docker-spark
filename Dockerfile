@@ -13,8 +13,13 @@ RUN adduser -Ds /bin/bash spark \
     curl \
     tar \
     && export SPARK_PACKAGE=spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} \
-    && echo "Downloading and installing Spark version ${SPARK_VERSION} packaged for Hadoop version ${HADOOP_VERSION}." \
-    && curl -sL --retry 3 "http://apache.mirror.anlx.net/spark/spark-${SPARK_VERSION}/${SPARK_PACKAGE}.tgz" | \
+    && mirror_url=$( \
+        curl -sSL "http://www.apache.org/dyn/closer.cgi/?as_json=1" \
+        | grep "preferred" \
+        | sed -n 's#.*"\(http://*[^"]*\)".*#\1#p' \
+        ) \
+    && echo "Downloading and installing Spark version ${SPARK_VERSION} packaged for Hadoop version ${HADOOP_VERSION} from ${mirror_url}." \
+    && curl -sL --retry 3 "${mirror_url}/spark/spark-${SPARK_VERSION}/${SPARK_PACKAGE}.tgz" | \
     tar -xz --strip 1 -C $SPARK_HOME/ \
     && chown -R spark:spark $SPARK_HOME \
     && apk --no-cache del .build-dependencies \
